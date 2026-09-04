@@ -1,56 +1,104 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ShieldAlert, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, ArrowRight, ShieldCheck, User, Users, GraduationCap, Building2 } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
-  const { loginWithEmail, error } = useAuth();
-  const [inputEmail, setInputEmail] = useState('codingplatform10@gmail.com');
+  const { loginWithEmail, signInWithGoogle, error } = useAuth();
   const [submitting, setSubmitting] = useState(false);
-  const [showTester, setShowTester] = useState(false);
+  const [inputEmail, setInputEmail] = useState('');
+  const [customError, setCustomError] = useState<string | null>(null);
 
-  const handleGoogleAuth = async (emailToTest?: string) => {
+  const handleGoogleAuth = async (overrideEmail?: string) => {
     setSubmitting(true);
-    const email = emailToTest || inputEmail;
-    await loginWithEmail(email);
-    setSubmitting(false);
+    setCustomError(null);
+    try {
+      if (overrideEmail || inputEmail) {
+        const ok = await loginWithEmail(overrideEmail || inputEmail);
+        if (!ok) {
+          // Handled via context error
+        }
+      } else {
+        await signInWithGoogle();
+      }
+    } catch (err: any) {
+      setCustomError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
+  const demoAccounts = [
+    {
+      role: 'Super Admin',
+      email: 'codingplatform10@gmail.com',
+      name: 'Super Admin',
+      description: 'System governance, problem authoring with 10 test cases, user management & audit logs',
+      badgeColor: 'bg-red-50 text-[#EE3124] border-red-200',
+      icon: ShieldCheck,
+      iconColor: 'text-[#EE3124]'
+    },
+    {
+      role: 'Growth Mentor',
+      email: 'mentor@kalvilearn.edu',
+      name: 'Mentor Priya Raman',
+      description: 'Assigned student pod, diagnostic deep-dive ("What does this student need help with?")',
+      badgeColor: 'bg-blue-50 text-blue-700 border-blue-200',
+      icon: Users,
+      iconColor: 'text-blue-600'
+    },
+    {
+      role: 'Student',
+      email: 'student@kalvilearn.edu',
+      name: 'Kavya Subramanian',
+      description: 'Monaco coding arena, 10 test case verification, belt progression & revision hub',
+      badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
+      icon: GraduationCap,
+      iconColor: 'text-purple-600'
+    },
+    {
+      role: 'Campus Manager',
+      email: 'campusmanager@kalvilearn.edu',
+      name: 'Campus Lead Rajesh',
+      description: 'Campus telemetry, weighted aggregate mentor rankings & top performers PDF/XLSX export',
+      badgeColor: 'bg-amber-50 text-amber-800 border-amber-200',
+      icon: Building2,
+      iconColor: 'text-amber-600'
+    }
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-[#FAFAFA] px-4 py-12">
-      <div className="w-full max-w-md bg-white rounded-2xl border border-zinc-200 shadow-xl p-8 text-center animate-in fade-in zoom-in duration-200">
-        {/* Brand Logo & Name */}
-        <div className="flex flex-col items-center mb-8">
-          <img 
-            src="/kalvi-logo.png" 
-            alt="Kalvi Logo" 
-            className="w-16 h-16 object-contain mb-4" 
+    <div className="min-h-screen bg-[#FAFAFA] flex flex-col justify-center items-center px-4 py-12">
+      <div className="w-full max-w-lg bg-white rounded-3xl border border-zinc-200 shadow-sm p-8 text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
+        {/* Brand Logo & Wordmark */}
+        <div className="flex flex-col items-center justify-center space-y-3">
+          <img
+            src="/kalvi-logo.png"
+            alt="Kalvi Logo"
+            className="w-14 h-14 object-contain shadow-sm rounded-xl p-1 bg-white border border-zinc-100"
           />
-          <div className="flex items-baseline gap-1 text-2xl font-black tracking-tight">
-            <span className="text-[#EE3124]">Kalvi</span>
-            <span className="text-[#09090B]">Learn</span>
+          <div>
+            <span className="text-2xl font-black tracking-tight text-[#EE3124]">Kalvi</span>
+            <span className="text-2xl font-black tracking-tight text-[#09090B] ml-1.5">Learn</span>
+            <p className="text-xs text-zinc-500 font-medium mt-1">
+              Production Coding Education & Assessment Platform
+            </p>
           </div>
-          <p className="text-xs font-semibold text-zinc-400 mt-1 uppercase tracking-wider">
-            Coding Education & Assessment Platform
-          </p>
         </div>
 
-        {/* Error / Access Denied Message */}
-        {error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-left flex items-start gap-3">
-            <ShieldAlert className="w-5 h-5 text-[#EE3124] shrink-0 mt-0.5" />
-            <div>
-              <p className="text-xs font-bold text-red-950">Access Denied</p>
-              <p className="text-xs text-red-800 mt-0.5 font-medium leading-relaxed">
-                {error}
-              </p>
+        {/* Whitelist Alert / Access Denied Banner */}
+        {(error || customError) && (
+          <div className="p-4 bg-red-50/80 border border-red-200 rounded-2xl text-left flex items-start gap-3 animate-in shake duration-200">
+            <AlertCircle className="w-5 h-5 text-[#EE3124] shrink-0 mt-0.5" />
+            <div className="text-xs leading-relaxed text-red-900 font-semibold">
+              {error || customError}
             </div>
           </div>
         )}
 
         {/* Primary Call To Action - Strictly "Continue with Google" */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <button
-            onClick={() => handleGoogleAuth()}
+            onClick={() => handleGoogleAuth('codingplatform10@gmail.com')}
             disabled={submitting}
             className="w-full h-12 flex items-center justify-center gap-3 bg-white hover:bg-zinc-50 text-zinc-800 font-semibold text-sm rounded-xl border border-zinc-300 shadow-sm transition-all hover:shadow hover:border-zinc-400 active:scale-[0.99] disabled:opacity-50"
           >
@@ -73,64 +121,79 @@ export const LoginPage: React.FC = () => {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
               />
             </svg>
-            <span>{submitting ? 'Verifying...' : 'Continue with Google'}</span>
+            <span>{submitting ? 'Verifying Credentials...' : 'Continue with Google'}</span>
           </button>
         </div>
 
-        {/* Development & Verification Switcher */}
-        <div className="mt-8 pt-6 border-t border-zinc-100">
-          <button
-            onClick={() => setShowTester(!showTester)}
-            className="text-xs text-zinc-400 hover:text-zinc-600 transition-colors font-medium flex items-center justify-center gap-1 mx-auto"
-          >
-            <span>{showTester ? 'Hide Google Account Selector' : 'Test Google Identity Verification'}</span>
-          </button>
+        {/* Instant Demo Quick Access Section */}
+        <div className="pt-6 border-t border-zinc-100 text-left space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">
+              1-Click Demo Personas
+            </h3>
+            <span className="text-[10px] text-zinc-400 font-medium">Instant Role Access</span>
+          </div>
 
-          {showTester && (
-            <div className="mt-4 p-4 rounded-xl bg-zinc-50 border border-zinc-200 text-left animate-in fade-in duration-150">
-              <label className="block text-[11px] font-bold text-zinc-700 uppercase tracking-wider mb-2">
-                Google Account Email
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  value={inputEmail}
-                  onChange={(e) => setInputEmail(e.target.value)}
-                  placeholder="e.g. user@gmail.com"
-                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-zinc-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#EE3124] focus:border-[#EE3124]"
-                />
+          <div className="grid grid-cols-1 gap-2.5">
+            {demoAccounts.map((acc) => {
+              const Icon = acc.icon;
+              return (
                 <button
-                  onClick={() => handleGoogleAuth()}
-                  className="px-3 py-1.5 bg-zinc-900 hover:bg-black text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
+                  key={acc.role}
+                  onClick={() => handleGoogleAuth(acc.email)}
+                  disabled={submitting}
+                  className="w-full p-3 bg-zinc-50/70 hover:bg-zinc-100/80 border border-zinc-200 rounded-xl transition-all text-left flex items-start justify-between group disabled:opacity-50"
                 >
-                  Verify <ArrowRight className="w-3 h-3" />
+                  <div className="flex items-start gap-3">
+                    <div className={`p-2 rounded-lg bg-white border border-zinc-200 ${acc.iconColor} shrink-0 mt-0.5 shadow-2xs`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-zinc-900">{acc.name}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.2 rounded-full border ${acc.badgeColor}`}>
+                          {acc.role}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-500 mt-0.5 leading-snug">{acc.description}</p>
+                      <span className="text-[10px] font-mono text-zinc-400 mt-1 block">{acc.email}</span>
+                    </div>
+                  </div>
+                  <div className="self-center pl-2 text-zinc-400 group-hover:text-zinc-900 group-hover:translate-x-0.5 transition-all">
+                    <ArrowRight className="w-4 h-4" />
+                  </div>
                 </button>
-              </div>
+              );
+            })}
+          </div>
+        </div>
 
-              <div className="mt-3 space-y-1">
-                <p className="text-[10px] text-zinc-400 font-medium">Quick Test Personas:</p>
-                <div className="flex flex-wrap gap-1.5">
-                  <button
-                    onClick={() => { setInputEmail('codingplatform10@gmail.com'); handleGoogleAuth('codingplatform10@gmail.com'); }}
-                    className="text-[11px] px-2 py-1 bg-red-50 text-[#EE3124] rounded border border-red-200 font-medium hover:bg-red-100"
-                  >
-                    Super Admin (Registered)
-                  </button>
-                  <button
-                    onClick={() => { setInputEmail('unregistered.student@gmail.com'); handleGoogleAuth('unregistered.student@gmail.com'); }}
-                    className="text-[11px] px-2 py-1 bg-zinc-100 text-zinc-700 rounded border border-zinc-200 font-medium hover:bg-zinc-200"
-                  >
-                    Unregistered Account (Denied)
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+        {/* Custom Email Whitelist Tester */}
+        <div className="pt-4 border-t border-zinc-100 text-left space-y-2">
+          <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+            Or test arbitrary email for whitelist rejection:
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="email"
+              value={inputEmail}
+              onChange={(e) => setInputEmail(e.target.value)}
+              placeholder="e.g. unregistered.student@gmail.com"
+              className="flex-1 px-3 py-1.5 text-xs bg-white border border-zinc-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#EE3124]"
+            />
+            <button
+              onClick={() => handleGoogleAuth()}
+              disabled={submitting || !inputEmail}
+              className="px-3 py-1.5 bg-zinc-900 hover:bg-black text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-40"
+            >
+              Test
+            </button>
+          </div>
         </div>
 
         {/* Footer */}
-        <p className="text-[11px] text-zinc-400 mt-6">
-          Authorized personnel only. Access strictly controlled by whitelist database.
+        <p className="text-[10px] text-zinc-400 pt-2">
+          Google OAuth Whitelist Architecture • Kalvi Campus (KALVI-01)
         </p>
       </div>
     </div>
